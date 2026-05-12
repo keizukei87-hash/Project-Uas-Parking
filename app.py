@@ -104,7 +104,6 @@ def init_db():
         """)
 
         # Tabel logs_parkir - DROP dan RECREATE agar struktur selalu benar
-        # (Data lama akan hilang, tapi untuk aplikasi baru ini acceptable)
         cursor.execute("DROP TABLE IF EXISTS logs_parkir")
         cursor.execute("""
             CREATE TABLE logs_parkir (
@@ -117,9 +116,9 @@ def init_db():
             )
         """)
 
-        # Insert data contoh (gunakan IGNORE jika sudah ada)
+        # Insert data contoh
         cursor.execute("""
-            INSERT IGNORE INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
+            INSERT INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
             ('2026-05-12 08:30:00', 'Motor', 'Area A', 'Masuk', 'BG 1234 AB'),
             ('2026-05-12 09:15:00', 'Mobil', 'Area B', 'Masuk', 'BG 5678 CD'),
             ('2026-05-12 10:00:00', 'Motor', 'Area A', 'Keluar', 'BG 1234 AB'),
@@ -166,8 +165,6 @@ def create_admin():
 # =========================
 # INISIALISASI SAAT MODULE LOAD
 # =========================
-# Selalu jalankan init_db saat module load (Gunicorn restart)
-# agar struktur tabel selalu fresh
 
 init_db()
 create_admin()
@@ -300,6 +297,12 @@ def logs_parkir():
 
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
+
+        print("=== LOGS DATA DEBUG ===")
+        for row in data:
+            print(f"ID={row[0]}, WAKTU={row[1]}, JENIS={row[2]}, AREA={row[3]}, STATUS={row[4]}, PLAT={row[5]}")
+        print("=======================")
+
         cursor.close()
         db.close()
         return render_template('logs.html', logs=data)
@@ -316,16 +319,42 @@ def logs():
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
-
-        # DEBUG: Print data ke console Railway
-        print("=== LOGS DATA ===")
-        for row in data:
-            print(row)
-        print("=================")
-
         cursor.close()
         db.close()
         return render_template('logs.html', logs=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+# =========================
+# DEBUG ENDPOINT - untuk cek struktur tabel
+# =========================
+
+@app.route('/debug/logs')
+def debug_logs():
+    if 'login' not in session:
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        # Cek struktur tabel
+        cursor.execute("DESCRIBE logs_parkir")
+        structure = cursor.fetchall()
+
+        # Cek isi tabel
+        cursor.execute("SELECT * FROM logs_parkir")
+        data = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        result = {
+            "structure": [dict(zip([desc[0] for desc in cursor.description], row)) for row in structure],
+            "data": [dict(zip([desc[0] for desc in cursor.description], row)) for row in data]
+        }
+
+        return jsonify(result)
     except Exception as e:
         return f"Error: {str(e)}", 500
 
