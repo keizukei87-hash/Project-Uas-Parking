@@ -91,13 +91,18 @@ def init_db():
             )
         """)
 
-        # Insert data contoh area parkir
+        # Insert data contoh area parkir (9 area A-I)
         cursor.execute("""
             INSERT INTO area_parkir (nama_area, kapasitas, terisi, latitude, longitude, deskripsi) VALUES
             ('Area A', 50, 50, -2.9837065643079965, 104.73211643817673, 'Dekat gerbang utama'),
             ('Area B', 40, 20, -2.983961190573041, 104.73306121169654, 'Samping perpustakaan'),
             ('Area C', 30, 30, -2.9838250961761212, 104.73139706489253, 'Belakang gedung rektorat'),
-            ('Area D', 60, 10, -2.9856510487165395, 104.73189037947515, 'Dekat kantin')
+            ('Area D', 60, 10, -2.9856510487165395, 104.73189037947515, 'Dekat kantin'),
+            ('Area E', 45, 45, -2.9833087206593865, 104.73278054791197, 'Dekat laboratorium'),
+            ('Area F', 55, 25, -2.9823599816598514, 104.73414272325915, 'Samping auditorium'),
+            ('Area G', 35, 35, -2.9858030737882704, 104.73309939403573, 'Dekat masjid kampus'),
+            ('Area H', 70, 30, -2.9862083968654765, 104.73377458655203, 'Parkir gedung baru'),
+            ('Area I', 25, 25, -2.985583365891527, 104.7340552845633, 'Area parkir dosen')
         """)
 
         # Tabel laporan
@@ -449,13 +454,18 @@ def admin_kelola_area():
         cursor.close()
         db.close()
 
-        # Jika data kosong, beri fallback
+        # Jika data kosong, beri fallback 9 area (A-I)
         if not data:
             data = [
                 (1, 'Area A', 'Penuh'),
                 (2, 'Area B', 'Tersedia'),
                 (3, 'Area C', 'Penuh'),
-                (4, 'Area D', 'Tersedia')
+                (4, 'Area D', 'Tersedia'),
+                (5, 'Area E', 'Penuh'),
+                (6, 'Area F', 'Tersedia'),
+                (7, 'Area G', 'Penuh'),
+                (8, 'Area H', 'Tersedia'),
+                (9, 'Area I', 'Penuh')
             ]
 
         return render_template('admin_kelola_area.html', data=data)
