@@ -117,9 +117,9 @@ def init_db():
             )
         """)
 
-        # Insert data contoh
+        # Insert data contoh (gunakan IGNORE jika sudah ada)
         cursor.execute("""
-            INSERT INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
+            INSERT IGNORE INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
             ('2026-05-12 08:30:00', 'Motor', 'Area A', 'Masuk', 'BG 1234 AB'),
             ('2026-05-12 09:15:00', 'Mobil', 'Area B', 'Masuk', 'BG 5678 CD'),
             ('2026-05-12 10:00:00', 'Motor', 'Area A', 'Keluar', 'BG 1234 AB'),
@@ -166,13 +166,11 @@ def create_admin():
 # =========================
 # INISIALISASI SAAT MODULE LOAD
 # =========================
+# Selalu jalankan init_db saat module load (Gunicorn restart)
+# agar struktur tabel selalu fresh
 
-_db_initialized = False
-
-if not _db_initialized:
-    init_db()
-    create_admin()
-    _db_initialized = True
+init_db()
+create_admin()
 
 # =========================
 # ROUTES
