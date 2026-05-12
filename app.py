@@ -58,7 +58,7 @@ def get_db_connection():
 # =========================
 
 def init_db():
-    """Membuat tabel jika belum ada, atau alter jika struktur lama."""
+    """Membuat tabel jika belum ada, dan insert data contoh."""
     try:
         db = get_db_connection()
         cursor = db.cursor()
@@ -77,9 +77,10 @@ def init_db():
             )
         """)
 
-        # Tabel area_parkir
+        # Tabel area_parkir - DROP dan RECREATE untuk memastikan data fresh
+        cursor.execute("DROP TABLE IF EXISTS area_parkir")
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS area_parkir (
+            CREATE TABLE area_parkir (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nama_area VARCHAR(100) NOT NULL,
                 kapasitas INT DEFAULT 0,
@@ -90,18 +91,14 @@ def init_db():
             )
         """)
 
-        # Insert data contoh area parkir (jika belum ada)
-        cursor.execute("SELECT COUNT(*) FROM area_parkir")
-        count = cursor.fetchone()[0]
-
-        if count == 0:
-            cursor.execute("""
-                INSERT INTO area_parkir (nama_area, kapasitas, terisi, latitude, longitude, deskripsi) VALUES
-                ('Area A', 50, 50, -2.9837065643079965, 104.73211643817673, 'Dekat gerbang utama'),
-                ('Area B', 40, 20, -2.983961190573041, 104.73306121169654, 'Samping perpustakaan'),
-                ('Area C', 30, 30, -2.9838250961761212, 104.73139706489253, 'Belakang gedung rektorat'),
-                ('Area D', 60, 10, -2.9856510487165395, 104.73189037947515, 'Dekat kantin')
-            """)
+        # Insert data contoh area parkir
+        cursor.execute("""
+            INSERT INTO area_parkir (nama_area, kapasitas, terisi, latitude, longitude, deskripsi) VALUES
+            ('Area A', 50, 50, -2.9837065643079965, 104.73211643817673, 'Dekat gerbang utama'),
+            ('Area B', 40, 20, -2.983961190573041, 104.73306121169654, 'Samping perpustakaan'),
+            ('Area C', 30, 30, -2.9838250961761212, 104.73139706489253, 'Belakang gedung rektorat'),
+            ('Area D', 60, 10, -2.9856510487165395, 104.73189037947515, 'Dekat kantin')
+        """)
 
         # Tabel laporan
         cursor.execute("""
@@ -116,7 +113,7 @@ def init_db():
             )
         """)
 
-        # Tabel logs_parkir - DROP dan RECREATE agar struktur selalu benar
+        # Tabel logs_parkir - DROP dan RECREATE
         cursor.execute("DROP TABLE IF EXISTS logs_parkir")
         cursor.execute("""
             CREATE TABLE logs_parkir (
@@ -129,7 +126,7 @@ def init_db():
             )
         """)
 
-        # Insert data contoh
+        # Insert data contoh logs
         cursor.execute("""
             INSERT INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
             ('2026-05-12 08:30:00', 'Motor', 'Area A', 'Masuk', 'BG 1234 AB'),
@@ -141,7 +138,7 @@ def init_db():
         db.commit()
         cursor.close()
         db.close()
-        print("[INFO] Database initialized successfully")
+        print("[INFO] Database initialized successfully - ALL TABLES RECREATED")
 
     except Exception as e:
         print(f"[ERROR] Database init failed: {e}")
@@ -348,23 +345,36 @@ def debug_logs():
         db = get_db_connection()
         cursor = db.cursor()
 
-        # Cek struktur tabel
         cursor.execute("DESCRIBE logs_parkir")
         structure = cursor.fetchall()
 
-        # Cek isi tabel
         cursor.execute("SELECT * FROM logs_parkir")
         data = cursor.fetchall()
 
         cursor.close()
         db.close()
 
-        result = {
-            "structure": [dict(zip([desc[0] for desc in cursor.description], row)) for row in structure],
-            "data": [dict(zip([desc[0] for desc in cursor.description], row)) for row in data]
-        }
+        return jsonify({"structure": str(structure), "data": str(data)})
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
-        return jsonify(result)
+@app.route('/debug/area')
+def debug_area():
+    if 'login' not in session:
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
+
+        cursor.execute("SELECT * FROM area_parkir")
+        data = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        print(f"DEBUG AREA: {data}")
+        return jsonify({"area_data": [str(row) for row in data], "count": len(data)})
     except Exception as e:
         return f"Error: {str(e)}", 500
 
