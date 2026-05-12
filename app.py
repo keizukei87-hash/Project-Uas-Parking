@@ -26,11 +26,9 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 def get_db_config():
     """Mengambil konfigurasi database dari environment variables."""
 
-    # Cek apakah Railway menyediakan DATABASE_URL atau MYSQL_URL
     database_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
 
     if database_url:
-        # Parse dari URL (format: mysql://user:pass@host:port/dbname)
         parsed = urllib.parse.urlparse(database_url)
         return {
             'host': parsed.hostname,
@@ -41,7 +39,6 @@ def get_db_config():
             'cursorclass': pymysql.cursors.DictCursor
         }
 
-    # Fallback ke individual variables dengan default values
     return {
         'host': os.getenv("MYSQLHOST", os.getenv("MYSQL_HOST", "localhost")),
         'user': os.getenv("MYSQLUSER", os.getenv("MYSQL_USER", "root")),
@@ -52,9 +49,64 @@ def get_db_config():
     }
 
 def get_db_connection():
-    """Membuat koneksi database baru setiap kali dipanggil."""
+    """Membuat koneksi database baru."""
     config = get_db_config()
     return pymysql.connect(**config)
+
+# =========================
+# AUTO CREATE TABLES
+# =========================
+
+def init_db():
+    """Membuat tabel jika belum ada."""
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        # Tabel users
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama VARCHAR(100) NOT NULL,
+                nim VARCHAR(20) NOT NULL,
+                fakultas VARCHAR(100) NOT NULL,
+                nohp VARCHAR(20) NOT NULL,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(20) DEFAULT 'user'
+            )
+        """)
+
+        # Tabel area_parkir
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS area_parkir (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama_area VARCHAR(100) NOT NULL,
+                kapasitas INT DEFAULT 0,
+                terisi INT DEFAULT 0
+            )
+        """)
+
+        # Tabel laporan
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS laporan (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                area VARCHAR(100) NOT NULL,
+                plat VARCHAR(20) NOT NULL,
+                keterangan TEXT,
+                foto VARCHAR(255),
+                status VARCHAR(50) DEFAULT 'Belum Dibaca',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        db.commit()
+        cursor.close()
+        db.close()
+        print("[INFO] Database initialized successfully")
+
+    except Exception as e:
+        print(f"[ERROR] Database init failed: {e}")
 
 # =========================
 # AUTO CREATE ADMIN
@@ -65,30 +117,18 @@ def create_admin():
         db = get_db_connection()
         cursor = db.cursor()
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
-            ("admin@gmail.com",)
-        )
-
+        cursor.execute("SELECT * FROM users WHERE email=%s", ("admin@gmail.com",))
         admin = cursor.fetchone()
 
         if not admin:
             password_hash = generate_password_hash("admin123")
-
             cursor.execute("""
-                INSERT INTO users
-                (nama, nim, fakultas, nohp, email, password, role)
+                INSERT INTO users (nama, nim, fakultas, nohp, email, password, role)
                 VALUES (%s,%s,%s,%s,%s,%s,%s)
             """, (
-                "Administrator",
-                "000000",
-                "Admin",
-                "08123456789",
-                "admin@gmail.com",
-                password_hash,
-                "admin"
+                "Administrator", "000000", "Admin",
+                "08123456789", "admin@gmail.com", password_hash, "admin"
             ))
-
             db.commit()
 
         cursor.close()
@@ -98,145 +138,105 @@ def create_admin():
         print(f"[WARNING] Gagal membuat admin: {e}")
 
 # =========================
-# LOGIN PAGE
+# ROUTES
 # =========================
 
 @app.route('/')
 def login():
     return render_template('login.html')
 
-# =========================
-# REGISTER PAGE
-# =========================
-
 @app.route('/register')
 def register():
     return render_template('register.html')
 
-# =========================
-# REGISTER PROCESS
-# =========================
-
 @app.route('/do_register', methods=['POST'])
 def do_register():
-    nama = request.form['nama']
-    nim = request.form['nim']
-    fakultas = request.form['fakultas']
-    nohp = request.form['nohp']
-    email = request.form['email']
-    password = generate_password_hash(request.form['password'])
+    try:
+        nama = request.form['nama']
+        nim = request.form['nim']
+        fakultas = request.form['fakultas']
+        nohp = request.form['nohp']
+        email = request.form['email']
+        password = generate_password_hash(request.form['password'])
 
-    db = get_db_connection()
-    cursor = db.cursor()
+        db = get_db_connection()
+        cursor = db.cursor()
 
-    cursor.execute(
-        "SELECT * FROM users WHERE email=%s",
-        (email,)
-    )
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        cek = cursor.fetchone()
 
-    cek = cursor.fetchone()
+        if cek:
+            cursor.close()
+            db.close()
+            return "Email sudah terdaftar!"
 
-    if cek:
+        cursor.execute("""
+            INSERT INTO users (nama, nim, fakultas, nohp, email, password, role)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (nama, nim, fakultas, nohp, email, password, "user"))
+
+        db.commit()
         cursor.close()
         db.close()
-        return "Email sudah terdaftar!"
 
-    cursor.execute("""
-        INSERT INTO users
-        (nama, nim, fakultas, nohp, email, password, role)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-    """, (
-        nama,
-        nim,
-        fakultas,
-        nohp,
-        email,
-        password,
-        "user"
-    ))
+        return redirect('/')
 
-    db.commit()
-    cursor.close()
-    db.close()
-
-    return redirect('/')
-
-# =========================
-# LOGIN PROCESS
-# =========================
+    except Exception as e:
+        return f"Error saat registrasi: {str(e)}", 500
 
 @app.route('/login', methods=['POST'])
 def do_login():
-    email = request.form['email']
-    password = request.form['password']
+    try:
+        email = request.form['email']
+        password = request.form['password']
 
-    db = get_db_connection()
-    cursor = db.cursor()
+        db = get_db_connection()
+        cursor = db.cursor()
 
-    cursor.execute(
-        "SELECT * FROM users WHERE email=%s",
-        (email,)
-    )
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        user = cursor.fetchone()
 
-    user = cursor.fetchone()
+        cursor.close()
+        db.close()
 
-    cursor.close()
-    db.close()
+        if user and check_password_hash(user['password'], password):
+            session['login'] = True
+            session['nama'] = user['nama']
+            session['role'] = user['role']
+            session['email'] = user['email']
+            return redirect('/dashboard')
 
-    if user and check_password_hash(user['password'], password):
-        session['login'] = True
-        session['nama'] = user['nama']
-        session['role'] = user['role']
-        session['email'] = user['email']
-        return redirect('/dashboard')
+        return "Login gagal!"
 
-    return "Login gagal!"
-
-# =========================
-# DASHBOARD
-# =========================
+    except Exception as e:
+        return f"Error saat login: {str(e)}", 500
 
 @app.route('/dashboard')
 def dashboard():
     if 'login' not in session:
         return redirect('/')
-
     if session['role'] == 'admin':
         return render_template('dashboard_admin.html')
-
     return render_template('dashboard_user.html')
-
-# =========================
-# AREA PARKIR
-# =========================
 
 @app.route('/lihat_area')
 def lihat_area():
-    db = get_db_connection()
-    cursor = db.cursor()
-
-    cursor.execute("SELECT * FROM area_parkir")
-    data = cursor.fetchall()
-
-    cursor.close()
-    db.close()
-
-    return render_template('lihat_area.html', area=data)
-
-# =========================
-# PROFIL
-# =========================
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM area_parkir")
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('lihat_area.html', area=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 @app.route('/profil')
 def profil():
     if 'login' not in session:
         return redirect('/')
-
     return render_template('profil.html')
-
-# =========================
-# LAPOR PARKIR LIAR
-# =========================
 
 @app.route('/lapor_parkir_liar', methods=['GET', 'POST'])
 def lapor_parkir_liar():
@@ -244,46 +244,33 @@ def lapor_parkir_liar():
         return redirect('/')
 
     if request.method == 'POST':
-        area = request.form['area']
-        plat = request.form['plat']
-        keterangan = request.form['keterangan']
+        try:
+            area = request.form['area']
+            plat = request.form['plat']
+            keterangan = request.form['keterangan']
+            foto = request.files['foto']
+            filename = secure_filename(foto.filename)
 
-        foto = request.files['foto']
-        filename = secure_filename(foto.filename)
+            foto.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        foto.save(
-            os.path.join(
-                app.config['UPLOAD_FOLDER'],
-                filename
-            )
-        )
+            db = get_db_connection()
+            cursor = db.cursor()
 
-        db = get_db_connection()
-        cursor = db.cursor()
+            cursor.execute("""
+                INSERT INTO laporan (area, plat, keterangan, foto, status)
+                VALUES (%s,%s,%s,%s,%s)
+            """, (area, plat, keterangan, filename, "Belum Dibaca"))
 
-        cursor.execute("""
-            INSERT INTO laporan
-            (area, plat, keterangan, foto, status)
-            VALUES (%s,%s,%s,%s,%s)
-        """, (
-            area,
-            plat,
-            keterangan,
-            filename,
-            "Belum Dibaca"
-        ))
+            db.commit()
+            cursor.close()
+            db.close()
 
-        db.commit()
-        cursor.close()
-        db.close()
+            return redirect('/dashboard')
 
-        return redirect('/dashboard')
+        except Exception as e:
+            return f"Error saat melapor: {str(e)}", 500
 
     return render_template('lapor_parkir_liar.html')
-
-# =========================
-# LOGOUT
-# =========================
 
 @app.route('/logout')
 def logout():
@@ -295,8 +282,8 @@ def logout():
 # =========================
 
 if __name__ == '__main__':
-    # Buat admin saat pertama kali run (opsional)
-    create_admin()
+    init_db()      # Buat tabel jika belum ada
+    create_admin() # Buat admin default
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
