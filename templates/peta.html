@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Peta Parkir</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+        }
+
+        #map {
+            height: 100vh;
+        }
+
+        .back {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: black;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+        /* LOADER BACKGROUND */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(2, 6, 23, 0.9); /* dark premium */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+/* AKTIF */
+#loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* SPINNER */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #1e293b;
+    border-top: 5px solid #ffc107; /* emas */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ANIMASI */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+    </style>
+</head>
+
+<div id="loader">
+    <div class="spinner"></div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loader = document.getElementById("loader");
+
+    document.querySelectorAll("a").forEach(link => {
+
+        link.addEventListener("click", function (e) {
+
+            const href = this.getAttribute("href");
+
+            if (!href || href.startsWith("#")) return;
+            if (this.hostname !== window.location.hostname) return;
+
+            e.preventDefault();
+
+            // tampilkan loader
+            loader.classList.add("active");
+
+            setTimeout(() => {
+                window.location.href = href;
+            }, 500);
+        });
+
+    });
+
+});
+</script>
+
+<body>
+
+<a href="/dashboard" class="back">⬅ Kembali</a>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([-2.985165585487303, 104.73240232069837], 16); // contoh Palembang
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // contoh area parkir
+    L.marker([-2.9837065643079965, 104.73211643817673]).addTo(map)
+        .bindPopup("Area A - Penuh");
+
+    L.marker([-2.983961190573041, 104.73306121169654]).addTo(map)
+        .bindPopup("Area B - Penuh");
+    
+    L.marker([-2.9838250961761212, 104.73139706489253]).addTo(map)
+        .bindPopup("Area C - Tersedia");
+
+    L.marker([-2.9856510487165395, 104.73189037947515]).addTo(map)
+        .bindPopup("Area D - Tersedia");
+
+    L.marker([-2.9833087206593865, 104.73278054791197]).addTo(map)
+        .bindPopup("Area E - Penuh");
+
+    L.marker([-2.9823599816598514, 104.73414272325915]).addTo(map)
+        .bindPopup("Area F - Penuh");
+
+    L.marker([-2.9858030737882704, 104.73309939403573]).addTo(map)
+        .bindPopup("Area G - Tersedia");
+
+    L.marker([-2.9862083968654765, 104.73377458655203]).addTo(map)
+        .bindPopup("Area H - Penuh");
+
+    L.marker([-2.985583365891527, 104.7340552845633]).addTo(map)
+        .bindPopup("Area I - Tersedia");
+
+</script>
+
+</body>
+</html>

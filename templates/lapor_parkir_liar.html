@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lapor Parkir Liar</title>
+<style>
+body {
+    background: #020b1f;
+    font-family: Arial, sans-serif;
+}
+
+/* CENTER LAYOUT */
+.container-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* BOX FORM */
+.form-box {
+    background: #071633;
+    padding: 40px;
+    border-radius: 15px;
+    width: 420px; /* diperbesar */
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* TITLE */
+.form-box h2 {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 25px;
+}
+
+/* INPUT */
+.form-box select,
+.form-box input,
+.form-box textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #1e3a5f;
+    background: #020b1f;
+    color: #fff;
+    font-size: 14px;
+
+    /* 🔥 WAJIB ini biar ukuran sama */
+    box-sizing: border-box;
+}
+
+/* Khusus textarea biar tinggi enak */
+.form-box textarea {
+    height: 100px;
+    resize: none;
+}
+
+/* Rapihin input file */
+.form-box input[type="file"] {
+    padding: 10px;
+    background: #020b1f;
+}
+
+
+/* BUTTON */
+.form-box button {
+    width: 100%;
+    padding: 12px;
+    background: #ffc107;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.form-box button:hover {
+    background: #e0a800;
+}
+.btn-kembali-fixed {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 999;
+
+    background: #071633;
+    color: #ffc107;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #ffc107;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+
+    transition: 0.3s;
+}
+
+/* Hover effect */
+.btn-kembali-fixed:hover {
+    background: #ffc107;
+    color: #000;
+}
+/* LOADER BACKGROUND */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(2, 6, 23, 0.9); /* dark premium */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+/* AKTIF */
+#loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* SPINNER */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #1e293b;
+    border-top: 5px solid #ffc107; /* emas */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ANIMASI */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+</style>
+</head>
+
+<div id="loader">
+    <div class="spinner"></div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loader = document.getElementById("loader");
+
+    document.querySelectorAll("a").forEach(link => {
+
+        link.addEventListener("click", function (e) {
+
+            const href = this.getAttribute("href");
+
+            if (!href || href.startsWith("#")) return;
+            if (this.hostname !== window.location.hostname) return;
+
+            e.preventDefault();
+
+            // tampilkan loader
+            loader.classList.add("active");
+
+            setTimeout(() => {
+                window.location.href = href;
+            }, 500);
+        });
+
+    });
+
+});
+</script>
+<body>
+
+<a href="/dashboard" class="btn-kembali-fixed">← Dashboard</a>
+
+<div class="container-center">
+    <div class="form-box">
+        <h2>Lapor Parkir Liar</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            <select name="area" required>
+                <option value="">Pilih Area</option>
+                <option>Area A</option>
+                <option>Area B</option>
+                <option>Area C</option>
+                <option>Area D</option>
+                <option>Area E</option>
+                <option>Area F</option>
+                <option>Area G</option>
+                <option>Area H</option>
+                <option>Area I</option>
+            </select>
+
+            <input type="text" name="plat" placeholder="Plat Nomor" required>
+
+            <textarea name="keterangan" placeholder="Keterangan" required></textarea>
+
+            <input type="file" name="foto">
+
+            <button type="submit">Kirim</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

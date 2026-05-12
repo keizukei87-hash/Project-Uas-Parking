@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard User</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #333;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 10px;
+            display: inline-block;
+            width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px;
+            background: #4CAF50;
+            border-radius: 5px;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .area {
+            background: white;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div>🚗 Campus Parking</div>
+    <div>
+        {{ session.username }} | <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Dashboard User</h2>
+
+    <div class="card">
+        <h3>🅿️ Slot Parkir</h3>
+        <p>Lihat slot parkir tersedia</p>
+        <div class="btn">Lihat</div>
+    </div>
+
+    <div class="card">
+        <h3>📊 Statistik</h3>
+        <p>Data penggunaan parkir</p>
+        <div class="btn">Buka</div>
+    </div>
+
+    <div class="card">
+        <h3>📄 Laporan</h3>
+        <p>Riwayat kendaraan</p>
+        <div class="btn">Lihat</div>
+    </div>
+
+    <div class="area">
+        <h3>Intensitas Parkir (Senin - Jumat)</h3>
+        <canvas id="parkingChart"></canvas>
+    </div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('parkingChart');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [
+            '07.00','08.00','09.00','10.00','11.00',
+            '12.00','13.00','14.00','15.00','16.00','17.00','18.00'
+        ],
+        datasets: [
+        {
+            label: 'Senin',
+            data: [10,25,40,55,60,45,50,65,70,60,40,20]
+        },
+        {
+            label: 'Selasa',
+            data: [8,20,35,50,58,48,55,60,68,55,35,18]
+        },
+        {
+            label: 'Rabu',
+            data: [12,28,42,58,65,50,60,70,75,65,45,22]
+        },
+        {
+            label: 'Kamis',
+            data: [9,22,38,52,60,47,58,68,72,62,42,19]
+        },
+        {
+            label: 'Jumat',
+            data: [7,18,30,45,50,40,48,55,60,50,30,15]
+        }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Grafik Intensitas Parkir Kampus'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Jumlah Kendaraan'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Jam'
+                }
+            }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

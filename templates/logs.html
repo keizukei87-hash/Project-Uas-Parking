@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Logs Parkir</title>
+
+<style>
+body{
+    background:#020617;
+    color:white;
+    font-family:Segoe UI;
+}
+
+.container{
+    padding:30px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#0f172a;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+th{
+    background:#facc15;
+    color:black;
+    padding:12px;
+}
+
+td{
+    padding:10px;
+    border-bottom:1px solid #1e293b;
+}
+
+.masuk{
+    color:#22c55e;
+    font-weight:bold;
+}
+
+.keluar{
+    color:#ef4444;
+    font-weight:bold;
+}
+.btn-kembali-fixed {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 999;
+
+    background: #071633;
+    color: #ffc107;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #ffc107;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+
+    transition: 0.3s;
+}
+
+/* Hover effect */
+.btn-kembali-fixed:hover {
+    background: #ffc107;
+    color: #000;
+}
+/* LOADER BACKGROUND */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(2, 6, 23, 0.9); /* dark premium */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+/* AKTIF */
+#loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* SPINNER */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #1e293b;
+    border-top: 5px solid #ffc107; /* emas */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ANIMASI */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
+
+</head>
+
+<div id="loader">
+    <div class="spinner"></div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loader = document.getElementById("loader");
+
+    document.querySelectorAll("a").forEach(link => {
+
+        link.addEventListener("click", function (e) {
+
+            const href = this.getAttribute("href");
+
+            if (!href || href.startsWith("#")) return;
+            if (this.hostname !== window.location.hostname) return;
+
+            e.preventDefault();
+
+            // tampilkan loader
+            loader.classList.add("active");
+
+            setTimeout(() => {
+                window.location.href = href;
+            }, 500);
+        });
+
+    });
+
+});
+</script>
+
+<body>
+
+<a href="/dashboard" class="btn-kembali-fixed">← Dashboard</a>
+
+<div class="container">
+<h2>Logs Kendaraan Parkir</h2>
+
+<table>
+<tr>
+<th>Waktu</th>
+<th>Jenis</th>
+<th>Area</th>
+<th>Status</th>
+<th>Plat</th>
+</tr>
+
+{% for log in logs %}
+<tr>
+<td>{{ log[1] }}</td>
+<td>{{ log[2] }}</td>
+<td>{{ log[3] }}</td>
+
+<td>
+{% if log[4] == 'Masuk' %}
+<span class="masuk">Masuk</span>
+{% else %}
+<span class="keluar">Keluar</span>
+{% endif %}
+</td>
+
+<td>{{ log[5] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+<script>
+setInterval(function(){
+    location.reload();
+}, 5000);
+</script>
+
+</body>
+</html>

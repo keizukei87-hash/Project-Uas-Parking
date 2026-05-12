@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lihat Area Parkir</title>
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background:#020617;
+    color:white;
+}
+
+.content{
+    padding:30px;
+}
+
+h2{
+    color:#facc15;
+}
+
+.area-container{
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+    gap:20px;
+    margin-top:20px;
+}
+
+.area-card{
+    background:#0f172a;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid rgba(255,215,0,0.15);
+}
+
+.area-title{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+.status{
+    font-weight:bold;
+}
+
+.tersedia{
+    color:#22c55e;
+}
+
+.penuh{
+    color:#ef4444;
+}
+.btn-kembali-fixed {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 999;
+
+    background: #071633;
+    color: #ffc107;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #ffc107;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+
+    transition: 0.3s;
+}
+
+/* Hover effect */
+.btn-kembali-fixed:hover {
+    background: #ffc107;
+    color: #000;
+}
+/* LOADER BACKGROUND */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(2, 6, 23, 0.9); /* dark premium */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+/* AKTIF */
+#loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* SPINNER */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #1e293b;
+    border-top: 5px solid #ffc107; /* emas */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ANIMASI */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
+</head>
+
+<div id="loader">
+    <div class="spinner"></div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loader = document.getElementById("loader");
+
+    document.querySelectorAll("a").forEach(link => {
+
+        link.addEventListener("click", function (e) {
+
+            const href = this.getAttribute("href");
+
+            if (!href || href.startsWith("#")) return;
+            if (this.hostname !== window.location.hostname) return;
+
+            e.preventDefault();
+
+            // tampilkan loader
+            loader.classList.add("active");
+
+            setTimeout(() => {
+                window.location.href = href;
+            }, 500);
+        });
+
+    });
+
+});
+</script>
+
+<body>
+
+<a href="/dashboard" class="btn-kembali-fixed">← Dashboard</a>
+
+<div class="content">
+<h2>Area Parkir Kampus</h2>
+
+<div class="area-container">
+
+<div class="area-card"><div class="area-title">Area A</div><div class="status penuh">Penuh</div></div>
+<div class="area-card"><div class="area-title">Area B</div><div class="status penuh">Penuh</div></div>
+<div class="area-card"><div class="area-title">Area C</div><div class="status tersedia">Tersedia</div></div>
+<div class="area-card"><div class="area-title">Area D</div><div class="status tersedia">Tersedia</div></div>
+<div class="area-card"><div class="area-title">Area E</div><div class="status penuh">Penuh</div></div>
+<div class="area-card"><div class="area-title">Area F</div><div class="status penuh">Penuh</div></div>
+<div class="area-card"><div class="area-title">Area G</div><div class="status tersedia">Tersedia</div></div>
+<div class="area-card"><div class="area-title">Area H</div><div class="status penuh">Penuh</div></div>
+<div class="area-card"><div class="area-title">Area I</div><div class="status tersedia">Tersedia</div></div>
+
+
+</div>
+</div>
+
+</body>
+</html>
