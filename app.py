@@ -83,7 +83,10 @@ def init_db():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nama_area VARCHAR(100) NOT NULL,
                 kapasitas INT DEFAULT 0,
-                terisi INT DEFAULT 0
+                terisi INT DEFAULT 0,
+                latitude DECIMAL(10, 8) DEFAULT NULL,
+                longitude DECIMAL(11, 8) DEFAULT NULL,
+                deskripsi TEXT
             )
         """)
 
@@ -97,6 +100,20 @@ def init_db():
                 foto VARCHAR(255),
                 status VARCHAR(50) DEFAULT 'Belum Dibaca',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Tabel logs_parkir (untuk riwayat parkir)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs_parkir (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama_user VARCHAR(100) NOT NULL,
+                nim VARCHAR(20) NOT NULL,
+                area VARCHAR(100) NOT NULL,
+                plat VARCHAR(20) NOT NULL,
+                waktu_masuk DATETIME DEFAULT CURRENT_TIMESTAMP,
+                waktu_keluar DATETIME DEFAULT NULL,
+                status VARCHAR(50) DEFAULT 'Parkir'
             )
         """)
 
@@ -140,8 +157,6 @@ def create_admin():
 # =========================
 # INISIALISASI SAAT MODULE LOAD
 # =========================
-# Jalankan sekali saat app.py di-import (saat Gunicorn start)
-# Gunakan flag agar tidak berulang jika worker restart
 
 _db_initialized = False
 
@@ -245,11 +260,59 @@ def lihat_area():
     except Exception as e:
         return f"Error: {str(e)}", 500
 
+# =========================
+# PETA PARKIR
+# =========================
+
+@app.route('/peta_parkir')
+def peta_parkir():
+    if 'login' not in session:
+        return redirect('/')
+
+    return render_template('peta.html')
+
+# =========================
+# LOGS PARKIR
+# =========================
+
+@app.route('/logs_parkir')
+def logs_parkir():
+    if 'login' not in session:
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        # Jika admin, lihat semua logs. Jika user, lihat logs miliknya sendiri
+        if session.get('role') == 'admin':
+            cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu_masuk DESC")
+        else:
+            cursor.execute(
+                "SELECT * FROM logs_parkir WHERE nim=%s ORDER BY waktu_masuk DESC",
+                (session.get('nim', ''),)
+            )
+
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('logs_parkir.html', logs=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+# =========================
+# PROFIL
+# =========================
+
 @app.route('/profil')
 def profil():
     if 'login' not in session:
         return redirect('/')
     return render_template('profil.html')
+
+# =========================
+# LAPOR PARKIR LIAR
+# =========================
 
 @app.route('/lapor_parkir_liar', methods=['GET', 'POST'])
 def lapor_parkir_liar():
@@ -284,6 +347,10 @@ def lapor_parkir_liar():
             return f"Error saat melapor: {str(e)}", 500
 
     return render_template('lapor_parkir_liar.html')
+
+# =========================
+# LOGOUT
+# =========================
 
 @app.route('/logout')
 def logout():
