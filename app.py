@@ -264,11 +264,11 @@ def lihat_area():
 # PETA PARKIR
 # =========================
 
-@app.route('/peta_parkir')
-def peta_parkir():
+@app.route('/peta')
+def peta_redirect():
     if 'login' not in session:
         return redirect('/')
-
+    
     return render_template('peta.html')
 
 # =========================
