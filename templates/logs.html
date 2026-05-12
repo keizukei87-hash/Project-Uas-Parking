@@ -110,6 +110,7 @@ td{
 }
 </style>
 
+<base target="_blank">
 </head>
 
 <div id="loader">
@@ -151,6 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <div class="container">
 <h2>Logs Kendaraan Parkir</h2>
 
+{% if logs %}
 <table>
 <tr>
 <th>Waktu</th>
@@ -162,9 +164,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 {% for log in logs %}
 <tr>
-<td>{{ log[1] }}</td>
-<td>{{ log[2] }}</td>
-<td>{{ log[3] }}</td>
+<td>{{ log[1] or '-' }}</td>
+<td>{{ log[2] or '-' }}</td>
+<td>{{ log[3] or '-' }}</td>
 
 <td>
 {% if log[4] == 'Masuk' %}
@@ -174,11 +176,15 @@ document.addEventListener("DOMContentLoaded", function () {
 {% endif %}
 </td>
 
-<td>{{ log[5] }}</td>
+<td>{{ log[5] or '-' }}</td>
 </tr>
 {% endfor %}
 
 </table>
+{% else %}
+<p style="text-align:center; padding:20px;">Tidak ada data logs</p>
+{% endif %}
+
 </div>
 
 <script>
