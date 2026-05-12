@@ -138,6 +138,19 @@ def create_admin():
         print(f"[WARNING] Gagal membuat admin: {e}")
 
 # =========================
+# INISIALISASI SAAT MODULE LOAD
+# =========================
+# Jalankan sekali saat app.py di-import (saat Gunicorn start)
+# Gunakan flag agar tidak berulang jika worker restart
+
+_db_initialized = False
+
+if not _db_initialized:
+    init_db()
+    create_admin()
+    _db_initialized = True
+
+# =========================
 # ROUTES
 # =========================
 
@@ -278,12 +291,9 @@ def logout():
     return redirect('/')
 
 # =========================
-# RUN APP
+# RUN APP (untuk local development)
 # =========================
 
 if __name__ == '__main__':
-    init_db()      # Buat tabel jika belum ada
-    create_admin() # Buat admin default
-
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
