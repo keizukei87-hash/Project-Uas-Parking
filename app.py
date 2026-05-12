@@ -282,23 +282,17 @@ def logs_parkir():
 
     try:
         db = get_db_connection()
+        # Pakai cursor default (tuple) agar cocok dengan template logs.html
         cursor = db.cursor()
 
-        # Jika admin, lihat semua logs. Jika user, lihat logs miliknya sendiri
-        if session.get('role') == 'admin':
-            cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu_masuk DESC")
-        else:
-            cursor.execute(
-                "SELECT * FROM logs_parkir WHERE nim=%s ORDER BY waktu_masuk DESC",
-                (session.get('nim', ''),)
-            )
-
+        cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
         cursor.close()
         db.close()
-        return render_template('logs_parkir.html', logs=data)
+        return render_template('logs.html', logs=data)
     except Exception as e:
         return f"Error: {str(e)}", 500
+
 
 # =========================
 # PROFIL
