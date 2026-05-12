@@ -293,15 +293,11 @@ def logs_parkir():
 
     try:
         db = get_db_connection()
-        cursor = db.cursor()
+        # Pakai cursor tanpa DictCursor agar hasilnya tuple
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
 
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
-
-        print("=== LOGS DATA DEBUG ===")
-        for row in data:
-            print(f"ID={row[0]}, WAKTU={row[1]}, JENIS={row[2]}, AREA={row[3]}, STATUS={row[4]}, PLAT={row[5]}")
-        print("=======================")
 
         cursor.close()
         db.close()
@@ -316,7 +312,8 @@ def logs():
 
     try:
         db = get_db_connection()
-        cursor = db.cursor()
+        # Pakai cursor tanpa DictCursor agar hasilnya tuple
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
         cursor.close()
