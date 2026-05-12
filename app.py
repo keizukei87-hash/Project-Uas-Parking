@@ -22,12 +22,13 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # DATABASE RAILWAY
 # =========================
 
-db = MySQLdb.connect(
+db = pymysql.connect(
     host=os.getenv("MYSQLHOST"),
     user=os.getenv("MYSQLUSER"),
-    passwd=os.getenv("MYSQLPASSWORD"),
-    db=os.getenv("MYSQLDATABASE"),
+    password=os.getenv("MYSQLPASSWORD"),
+    database=os.getenv("MYSQLDATABASE"),
     port=int(os.getenv("MYSQLPORT")),
+    cursorclass=pymysql.cursors.DictCursor
 )
 
 # =========================
@@ -35,6 +36,7 @@ db = MySQLdb.connect(
 # =========================
 
 def create_admin():
+
     cursor = db.cursor()
 
     cursor.execute(
@@ -208,6 +210,9 @@ def profil():
 @app.route('/lapor_parkir_liar', methods=['GET', 'POST'])
 def lapor_parkir_liar():
 
+    if 'login' not in session:
+        return redirect('/')
+
     if request.method == 'POST':
 
         area = request.form['area']
@@ -266,5 +271,6 @@ if __name__ == '__main__':
 
     app.run(
         host='0.0.0.0',
-        port=port
+        port=port,
+        debug=False
     )
