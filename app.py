@@ -54,11 +54,11 @@ def get_db_connection():
     return pymysql.connect(**config)
 
 # =========================
-# AUTO CREATE TABLES
+# AUTO CREATE / FIX TABLES
 # =========================
 
 def init_db():
-    """Membuat tabel jika belum ada."""
+    """Membuat tabel jika belum ada, atau alter jika struktur lama."""
     try:
         db = get_db_connection()
         cursor = db.cursor()
@@ -103,9 +103,11 @@ def init_db():
             )
         """)
 
-        # Tabel logs_parkir (untuk riwayat parkir)
+        # Tabel logs_parkir - DROP dan RECREATE agar struktur selalu benar
+        # (Data lama akan hilang, tapi untuk aplikasi baru ini acceptable)
+        cursor.execute("DROP TABLE IF EXISTS logs_parkir")
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS logs_parkir (
+            CREATE TABLE logs_parkir (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 waktu DATETIME DEFAULT CURRENT_TIMESTAMP,
                 jenis VARCHAR(50) DEFAULT 'Motor',
@@ -113,6 +115,15 @@ def init_db():
                 status VARCHAR(50) DEFAULT 'Masuk',
                 plat VARCHAR(20) NOT NULL
             )
+        """)
+
+        # Insert data contoh
+        cursor.execute("""
+            INSERT INTO logs_parkir (waktu, jenis, area, status, plat) VALUES
+            ('2026-05-12 08:30:00', 'Motor', 'Area A', 'Masuk', 'BG 1234 AB'),
+            ('2026-05-12 09:15:00', 'Mobil', 'Area B', 'Masuk', 'BG 5678 CD'),
+            ('2026-05-12 10:00:00', 'Motor', 'Area A', 'Keluar', 'BG 1234 AB'),
+            ('2026-05-12 11:30:00', 'Mobil', 'Area C', 'Masuk', 'BG 9012 EF')
         """)
 
         db.commit()
@@ -270,28 +281,11 @@ def peta_parkir():
     return render_template('peta.html')
 
 @app.route('/peta')
-def peta_redirect():
+def peta():
     if 'login' not in session:
         return redirect('/')
 
     return render_template('peta.html')
-
-@app.route('/logs')
-def logs_redirect():
-    if 'login' not in session:
-        return redirect('/')
-
-    try:
-        db = get_db_connection()
-        # Pakai cursor default (tuple) agar cocok dengan template logs.html
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
-        data = cursor.fetchall()
-        cursor.close()
-        db.close()
-        return render_template('logs.html', logs=data)
-    except Exception as e:
-        return f"Error: {str(e)}", 500
 
 # =========================
 # LOGS PARKIR
@@ -304,9 +298,24 @@ def logs_parkir():
 
     try:
         db = get_db_connection()
-        # Pakai cursor default (tuple) agar cocok dengan template logs.html
         cursor = db.cursor()
 
+        cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('logs.html', logs=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+@app.route('/logs')
+def logs():
+    if 'login' not in session:
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
         cursor.close()
