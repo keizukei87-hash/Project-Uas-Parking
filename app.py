@@ -404,6 +404,57 @@ def lapor_parkir_liar():
     return render_template('lapor_parkir_liar.html')
 
 # =========================
+# ADMIN KELOLA AREA PARKIR
+# =========================
+
+@app.route('/admin/kelola_area')
+def admin_kelola_area():
+    if 'login' not in session or session.get('role') != 'admin':
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
+        cursor.execute("SELECT id, nama_area, CASE WHEN terisi >= kapasitas THEN 'Penuh' ELSE 'Tersedia' END as status FROM area_parkir")
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('admin_kelola_area.html', data=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+@app.route('/admin/update_area/<int:area_id>')
+def admin_update_area(area_id):
+    if 'login' not in session or session.get('role') != 'admin':
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
+
+        # Toggle status: jika Penuh jadi Tersedia (kurangi terisi), jika Tersedia jadi Penuh (tambah terisi)
+        cursor.execute("SELECT kapasitas, terisi FROM area_parkir WHERE id=%s", (area_id,))
+        result = cursor.fetchone()
+
+        if result:
+            kapasitas, terisi = result
+            if terisi >= kapasitas:
+                # Penuh -> Tersedia (kurangi terisi)
+                new_terisi = max(0, terisi - 1)
+            else:
+                # Tersedia -> Penuh (tambah terisi)
+                new_terisi = min(kapasitas, terisi + 1)
+
+            cursor.execute("UPDATE area_parkir SET terisi=%s WHERE id=%s", (new_terisi, area_id))
+            db.commit()
+
+        cursor.close()
+        db.close()
+        return redirect('/admin/kelola_area')
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+# =========================
 # LOGOUT
 # =========================
 
