@@ -90,6 +90,19 @@ def init_db():
             )
         """)
 
+        # Insert data contoh area parkir (jika belum ada)
+        cursor.execute("SELECT COUNT(*) FROM area_parkir")
+        count = cursor.fetchone()[0]
+
+        if count == 0:
+            cursor.execute("""
+                INSERT INTO area_parkir (nama_area, kapasitas, terisi, latitude, longitude, deskripsi) VALUES
+                ('Area A', 50, 50, -2.9837065643079965, 104.73211643817673, 'Dekat gerbang utama'),
+                ('Area B', 40, 20, -2.983961190573041, 104.73306121169654, 'Samping perpustakaan'),
+                ('Area C', 30, 30, -2.9838250961761212, 104.73139706489253, 'Belakang gedung rektorat'),
+                ('Area D', 60, 10, -2.9856510487165395, 104.73189037947515, 'Dekat kantin')
+            """)
+
         # Tabel laporan
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS laporan (
@@ -417,6 +430,11 @@ def admin_kelola_area():
         cursor = db.cursor(cursor=pymysql.cursors.Cursor)
         cursor.execute("SELECT id, nama_area, CASE WHEN terisi >= kapasitas THEN 'Penuh' ELSE 'Tersedia' END as status FROM area_parkir")
         data = cursor.fetchall()
+
+        print(f"=== AREA DATA: {len(data)} rows ===")
+        for row in data:
+            print(row)
+
         cursor.close()
         db.close()
         return render_template('admin_kelola_area.html', data=data)
