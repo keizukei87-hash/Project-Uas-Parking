@@ -504,6 +504,27 @@ def admin_update_area(area_id):
         return f"Error: {str(e)}", 500
 
 # =========================
+# ADMIN LAPORAN PARKIR LIAR
+# =========================
+
+@app.route('/admin/laporan')
+def admin_laporan():
+    if 'login' not in session or session.get('role') != 'admin':
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        cursor = db.cursor(cursor=pymysql.cursors.Cursor)
+        cursor.execute("SELECT id, area, plat, keterangan, foto FROM laporan ORDER BY created_at DESC")
+        data = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+        return render_template('admin_laporan.html', data=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+# =========================
 # LOGOUT
 # =========================
 
