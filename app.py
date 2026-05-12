@@ -107,13 +107,11 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs_parkir (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                nama_user VARCHAR(100) NOT NULL,
-                nim VARCHAR(20) NOT NULL,
+                waktu DATETIME DEFAULT CURRENT_TIMESTAMP,
+                jenis VARCHAR(50) DEFAULT 'Motor',
                 area VARCHAR(100) NOT NULL,
-                plat VARCHAR(20) NOT NULL,
-                waktu_masuk DATETIME DEFAULT CURRENT_TIMESTAMP,
-                waktu_keluar DATETIME DEFAULT NULL,
-                status VARCHAR(50) DEFAULT 'Parkir'
+                status VARCHAR(50) DEFAULT 'Masuk',
+                plat VARCHAR(20) NOT NULL
             )
         """)
 
@@ -264,12 +262,36 @@ def lihat_area():
 # PETA PARKIR
 # =========================
 
+@app.route('/peta_parkir')
+def peta_parkir():
+    if 'login' not in session:
+        return redirect('/')
+
+    return render_template('peta.html')
+
 @app.route('/peta')
 def peta_redirect():
     if 'login' not in session:
         return redirect('/')
-    
+
     return render_template('peta.html')
+
+@app.route('/logs')
+def logs_redirect():
+    if 'login' not in session:
+        return redirect('/')
+
+    try:
+        db = get_db_connection()
+        # Pakai cursor default (tuple) agar cocok dengan template logs.html
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('logs.html', logs=data)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 # =========================
 # LOGS PARKIR
@@ -292,7 +314,6 @@ def logs_parkir():
         return render_template('logs.html', logs=data)
     except Exception as e:
         return f"Error: {str(e)}", 500
-
 
 # =========================
 # PROFIL
