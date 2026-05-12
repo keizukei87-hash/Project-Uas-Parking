@@ -318,6 +318,13 @@ def logs():
         cursor = db.cursor()
         cursor.execute("SELECT * FROM logs_parkir ORDER BY waktu DESC")
         data = cursor.fetchall()
+
+        # DEBUG: Print data ke console Railway
+        print("=== LOGS DATA ===")
+        for row in data:
+            print(row)
+        print("=================")
+
         cursor.close()
         db.close()
         return render_template('logs.html', logs=data)
